@@ -1,6 +1,7 @@
 import oracledb
 import os
 from dotenv import load_dotenv
+import pandas as pd
 
 load_dotenv()
 
@@ -10,6 +11,8 @@ ORACLE_CONFIG = {
     "dsn": os.getenv("ORACLE_DSN"),
     "mode": oracledb.AuthMode.DEFAULT
 }
+
+# oracledb.init_oracle_client(lib_dir=r"F:\OracleDB\instantclient_23_8")
 
 class Database:
     def __init__(self):
@@ -22,16 +25,21 @@ class Database:
         return self.connection
     
     def get_cml_data(self):
+        chunk_size = 1000
         conn = self.connect()
         cursor = conn.cursor()
 
         # query = """SELECT * FROM wet_topup WHERE rownum <= 10"""
         query = open("app/utils/queries/CML-page-transaction.sql", "r").read()
+        # query = open("app/utils/queries/CML-page-transaction-v2.sql", "r").read()
 
         # cursor.execute(query, P63_USER_ID="HPWIN1015")
         cursor.execute(query)
+        # chunks = pd.read_sql(query, con=conn, chunksize=chunk_size)
+        # for chunk in chunks:
+        #     yield chunk
+            
         records = cursor.fetchall()
-        print('records: ', records)
         
         cursor.close()
         return records
@@ -43,7 +51,4 @@ class Database:
 
 def connect_to_oracle():
     return oracledb.connect(**ORACLE_CONFIG)
-
-
-
 

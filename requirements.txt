@@ -9,4 +9,5 @@ langchain_pinecone
 langchain_community
 pinecone
 sentence-transformers
-
+openai
+pandas

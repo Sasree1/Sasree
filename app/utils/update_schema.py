@@ -62,6 +62,7 @@ def get_schema_and_relations(conn):
     cursor.close()
     return schema, relations
 
+
 def save_schema_file(schema, relations):
     os.makedirs(os.path.dirname(SCHEMA_FILE_PATH), exist_ok=True)
     with open(SCHEMA_FILE_PATH, "w") as f:
@@ -89,6 +90,7 @@ def main():
     print("[*] Saving schema to file...")
     save_schema_file(schema, relations)
     conn.close()
+
 
 if __name__ == "__main__":
     main()
