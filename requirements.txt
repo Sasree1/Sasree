@@ -11,3 +11,4 @@ pinecone
 sentence-transformers
 openai
 pandas
+tiktoken==0.9.0

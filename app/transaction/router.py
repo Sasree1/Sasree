@@ -16,7 +16,7 @@ router = APIRouter()
 
 @router.get('/query', response_class=CustomJSONResponse)
 async def query(user_query: UserQuery, response: Response):
-    # create_index()
+    create_index()
     ingest_data()
     user_question = user_query.query
     context = retrieve_from_pinecone(user_question)

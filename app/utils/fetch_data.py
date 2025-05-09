@@ -27,22 +27,22 @@ class Database:
     def get_cml_data(self):
         chunk_size = 1000
         conn = self.connect()
-        cursor = conn.cursor()
+        # cursor = conn.cursor()
 
         # query = """SELECT * FROM wet_topup WHERE rownum <= 10"""
         query = open("app/utils/queries/CML-page-transaction.sql", "r").read()
         # query = open("app/utils/queries/CML-page-transaction-v2.sql", "r").read()
 
         # cursor.execute(query, P63_USER_ID="HPWIN1015")
-        cursor.execute(query)
-        # chunks = pd.read_sql(query, con=conn, chunksize=chunk_size)
-        # for chunk in chunks:
-        #     yield chunk
+        # cursor.execute(query)
+        chunks = pd.read_sql(query, con=conn, chunksize=chunk_size)
+        for chunk in chunks:
+            yield chunk
             
-        records = cursor.fetchall()
+        # records = cursor.fetchall()
         
-        cursor.close()
-        return records
+        # cursor.close()
+        # return records
 
     def close(self):
         if self.connection:
