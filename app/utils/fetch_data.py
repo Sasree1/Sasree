@@ -25,7 +25,7 @@ class Database:
         return self.connection
     
     def get_cml_data(self):
-        chunk_size = 1000
+        chunk_size = 100
         conn = self.connect()
         # cursor = conn.cursor()
 

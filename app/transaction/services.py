@@ -17,7 +17,7 @@ from app.utils.fetch_data import Database
 
 load_dotenv()
 
-INDEX_NAME = "all-transactions"
+INDEX_NAME = os.environ.get("INDEX_NAME")
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
 
@@ -43,19 +43,21 @@ def save_last_trxdt(new_trxdt):
         json.dump({"last_trxdt": new_trxdt}, f)
 
 
-def create_index():
+def create_index(INDEX_NAME=INDEX_NAME):
+    is_axist = False
     for index in pc.list_indexes():
         if INDEX_NAME == index.get("name"):
-            pc.delete_index(INDEX_NAME)
+            is_axist = True
+            break
+            # pc.delete_index(INDEX_NAME)
             # pc.Index(INDEX_NAME)
             # return
 
-    pc.create_index(name=INDEX_NAME, dimension=384, metric="cosine", spec=ServerlessSpec(
-        cloud='aws', 
-        region='us-east-1'
-    ))
-
-    index = pc.Index(INDEX_NAME)
+    if not is_axist:
+        pc.create_index(name=INDEX_NAME, dimension=384, metric="cosine", spec=ServerlessSpec(
+            cloud='aws', 
+            region='us-east-1'
+        ))
 
 
 def generate_embeddings(embedding_input):
@@ -129,10 +131,8 @@ def create_metadata(row):
         "user_name": row["FLNAME"],
         "transaction_type": row["TRANC_TYPE"],
         "amount": row["AMOUNT"],
-        'gender': row["GENDER"],
         'trans_date': str(row["TRANCDT"]),
         'type': row["TRANC_TYPE"],
-        'amount': row["AMOUNT"],
     }
     return metadata
 
@@ -145,16 +145,11 @@ def estimate_vector_size(vector):
     return sys.getsizeof(json.dumps(vector).encode('utf-8'))
 
 
-def ingest_data():
-    warnings.filterwarnings('ignore')
-
+def ingest_data(INDEX_NAME=INDEX_NAME):
     index = pc.Index(INDEX_NAME)
-    index.describe_index_stats()
-
     db = Database()
 
     for cml_data in db.get_cml_data():
-        print(cml_data.head())
 
         ids = cml_data['TRANC_ID'].tolist()
         # metadata_list = cml_data.to_dict(orient='records')
@@ -174,7 +169,7 @@ def ingest_data():
     #         print('last_trxdt: ', last_trxdt)
     #         save_last_trxdt(last_trxdt)
         
-    #     user_id, flname, gender, trans_id, trans_date, type_, amount = cml_data[i]
+    #     user_id, flname, trans_id, trans_date, type_, amount = cml_data[i]
     #     embedding_input = f"User {flname} made a {type_} of RM {amount} on {trans_date}."
     #     embedding = generate_embeddings(embedding_input)
     #     # embedding = model.embed_query(embedding_input)
@@ -186,7 +181,6 @@ def ingest_data():
     #             'text': embedding_input,
     #             'user_id': user_id,
     #             'user_name': flname,
-    #             'gender': gender,
     #             'trans_date': str(trans_date),
     #             'type': type_,
     #             'amount': amount,
@@ -196,10 +190,10 @@ def ingest_data():
     # index.upsert(vectors=vectors)
 
 
-def retrieve_from_pinecone(user_query):
+async def retrieve_from_pinecone(user_query):
     model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
     pinecone = PineconeVectorStore.from_existing_index(index_name=INDEX_NAME, embedding=model)
-    context = pinecone.similarity_search(user_query, k=100)
+    context = await pinecone.asimilarity_search(user_query, k=100)
     return context
 
 
