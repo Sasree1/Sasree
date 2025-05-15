@@ -149,17 +149,16 @@ def ingest_data(INDEX_NAME=INDEX_NAME):
     index = pc.Index(INDEX_NAME)
     db = Database()
 
-    for cml_data in db.get_cml_data():
+    cml_data = db.get_cml_data_sync()
+    ids = cml_data['TRANC_ID'].tolist()
+    # metadata_list = cml_data.to_dict(orient='records')
+    
+    cml_data['embeddings'] = cml_data.apply(generate_embeddings_from_text, axis=1)
+    cml_data["metadata"] = cml_data.apply(create_metadata, axis=1)
+    embeddings = cml_data['embeddings'].tolist()
+    metadata_list = cml_data['metadata'].tolist()
 
-        ids = cml_data['TRANC_ID'].tolist()
-        # metadata_list = cml_data.to_dict(orient='records')
-        
-        cml_data['embeddings'] = cml_data.apply(generate_embeddings_from_text, axis=1)
-        cml_data["metadata"] = cml_data.apply(create_metadata, axis=1)
-        embeddings = cml_data['embeddings'].tolist()
-        metadata_list = cml_data['metadata'].tolist()
-
-        upsert_embeddings(index, ids, embeddings, metadata_list)
+    upsert_embeddings(index, ids, embeddings, metadata_list)
 
     # cml_data = db.get_cml_data()
     # vectors = []
@@ -188,6 +187,21 @@ def ingest_data(INDEX_NAME=INDEX_NAME):
     #     })
 
     # index.upsert(vectors=vectors)
+
+async def ingest_data_async(INDEX_NAME=INDEX_NAME):
+    index = pc.Index(INDEX_NAME)
+    db = Database()
+
+    async for cml_data in db.get_cml_data_async():
+        ids = cml_data['TRANC_ID'].tolist()
+        # metadata_list = cml_data.to_dict(orient='records')
+        
+        cml_data['embeddings'] = cml_data.apply(generate_embeddings_from_text, axis=1)
+        cml_data["metadata"] = cml_data.apply(create_metadata, axis=1)
+        embeddings = cml_data['embeddings'].tolist()
+        metadata_list = cml_data['metadata'].tolist()
+
+        upsert_embeddings(index, ids, embeddings, metadata_list)
 
 
 async def retrieve_from_pinecone(user_query):

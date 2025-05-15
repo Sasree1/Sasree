@@ -1,6 +1,7 @@
 import datetime
+import asyncio
 from fastapi import APIRouter, Response, WebSocket, WebSocketDisconnect
-from app.transaction.services import create_index, ingest_data, retrieve_from_pinecone
+from app.transaction.services import create_index, ingest_data, ingest_data_async, retrieve_from_pinecone
 
 from app.transaction.schema import UserQuery
 from app.core.custom_renderer import CustomJSONResponse
@@ -8,6 +9,8 @@ from app.core.custom_renderer import CustomJSONResponse
 from langchain_community.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
+
+from app.utils.fetch_data import Database
 
 
 router = APIRouter()
@@ -34,11 +37,17 @@ async def query(user_query: UserQuery, response: Response):
 
     chain = prompt | llm | StrOutputParser()
 
-    return chain.stream({
+    # return chain.stream({
+    #     "user_question": user_question,
+    #     "context": context,
+    #     "today_date": datetime.datetime.today().strftime('%Y-%m-%d')
+    # })
+    response = "".join(chain.stream({
         "user_question": user_question,
         "context": context,
         "today_date": datetime.datetime.today().strftime('%Y-%m-%d')
-    })
+    }))
+    return response
 
 @router.websocket("/ws/query")
 async def websocket_query(websocket: WebSocket):
@@ -88,7 +97,7 @@ async def websocket_query(websocket: WebSocket):
 @router.get('/generate-embeddings', response_class=CustomJSONResponse)
 async def generate_embeddings(response: Response):
     create_index("all-transactions-v2")
-    await ingest_data()
+    await ingest_data_async("all-transactions-v2")
 
     return {"message": "Embeddings generated successfully"}
 
