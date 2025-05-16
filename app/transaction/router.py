@@ -17,7 +17,7 @@ router = APIRouter()
 # llm = ChatOllama(model="llama3", temperature=0)
 
 
-@router.get('/query', response_class=CustomJSONResponse)
+@router.post('/query', response_class=CustomJSONResponse)
 async def query(user_query: UserQuery, response: Response):
     # create_index()
     # ingest_data()
@@ -98,6 +98,16 @@ async def websocket_query(websocket: WebSocket):
 async def generate_embeddings(response: Response):
     create_index("all-transactions-v2")
     await ingest_data_async("all-transactions-v2")
+
+    return {"message": "Embeddings generated successfully"}
+
+
+@router.get('/test-db', response_class=CustomJSONResponse)
+async def test_db(response: Response):
+    db = Database()
+
+    records = db.get_cml_data_sync()
+    print('records: ', records.head(10))
 
     return {"message": "Embeddings generated successfully"}
 
