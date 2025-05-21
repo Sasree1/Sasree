@@ -11,11 +11,14 @@ app = FastAPI(debug=True, reload=True)
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
-origins = ["*"]
+origins = ["https://lexmark-strictly-strip-doom.trycloudflare.com", "http://localhost:8000"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins = origins 
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 )
 
 PREFIX = "/api/v1"
