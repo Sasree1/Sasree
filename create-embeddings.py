@@ -1,4 +1,5 @@
 import os
+import asyncio
 from pinecone import Pinecone
 from pinecone import ServerlessSpec
 from langchain_community.embeddings import SentenceTransformerEmbeddings
@@ -34,6 +35,7 @@ def upsert_embeddings(index, ids, embeddings, metadata_list, batch_size=100):
             {"id": str(id_), "values": embedding, "metadata": metadata}
             for id_, embedding, metadata in zip(batch_ids, batch_embeddings, batch_metadata)
         ]
+        print('vectors: ', vectors)
         index.upsert(vectors)
 
 
@@ -80,7 +82,7 @@ async def ingest_data_async(INDEX_NAME=INDEX_NAME):
 
 if __name__ == "__main__":
     create_index("all-transactions-v2")
-    ingest_data_async(INDEX_NAME="all-transactions-v2")
+    asyncio.run(ingest_data_async(INDEX_NAME="all-transactions-v2"))
 
 
 

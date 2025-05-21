@@ -121,6 +121,7 @@ async def index_info(response: Response):
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
     index = pc.Index("all-transactions-v2")
     stats = index.describe_index_stats()
+    print('stats: ', stats)
 
 
-    return stats
+    return {"message": "Index info retrieved successfully"}
