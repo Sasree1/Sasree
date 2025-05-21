@@ -56,6 +56,5 @@ select * from (
        and nvl(wt.adjustment_type,'U')='R'
        and wt.status='P'
 )
-where rownum <= 100000
 order by trancdt desc
 -- where trancdt >= :TRANSACTION_FROM

@@ -15,6 +15,8 @@ from app.utils.fetch_data import Database
 
 router = APIRouter()
 # llm = ChatOllama(model="llama3", temperature=0)
+from pinecone import Pinecone
+import os
 
 
 @router.post('/query', response_class=CustomJSONResponse)
@@ -111,3 +113,14 @@ async def test_db(response: Response):
 
     return {"message": "Embeddings generated successfully"}
 
+
+@router.get('/index-info', response_class=CustomJSONResponse)
+async def index_info(response: Response):
+    # create_index("all-transactions-v2")
+
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    index = pc.Index("all-transactions-v2")
+    stats = index.describe_index_stats()
+
+
+    return stats
