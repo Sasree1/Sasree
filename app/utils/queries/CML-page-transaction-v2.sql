@@ -1,57 +1,66 @@
 select * from (
-       select user_id, tranc_id, to_char(claimdt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Top Up' tranc_type, amount from wet_topup
-       where claim='Y'
-       and status='P'
-       and adjustment='N'
-       and user_id=:P63_USER_ID
+       select wt.user_id, wp.FLNAME, wt.tranc_id, to_char(wt.claimdt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Top Up' tranc_type, wt.amount from wet_topup wt
+       join wem_playerdet wpd ON wt.user_id = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where wt.claim='Y'
+       and wt.status='P'
+       and wt.adjustment='N'
+       and wt.user_id=:P63_USER_ID
 
        union all
 
-       select user_id, tranc_id, to_char(issueddt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Withdraw' tranc_type, (amount*-1) amount from wet_withdraw
-       where status='P'
-       and user_id=:P63_USER_ID
+       select ww.user_id, wp.FLNAME, ww.tranc_id, to_char(ww.issueddt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Withdraw' tranc_type, (ww.amount*-1) amount from wet_withdraw ww
+       join wem_playerdet wpd ON ww.user_id = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where ww.status='P'
+       and ww.user_id=:P63_USER_ID
 
        union all
 
-       select frm_user user_id, tranc_id, to_char(issueddt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Transfer Out ('||to_user||')' tranc_type, (amount*-1) amount from wet_tp
-       where frm_user=:P63_USER_ID
-       and status='P'
+       select wt.frm_user user_id, wp.FLNAME, wt.tranc_id, to_char(wt.issueddt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Transfer Out ('||wt.to_user||')' tranc_type, (wt.amount*-1) amount from wet_tp wt
+       join wem_playerdet wpd ON wt.frm_user = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where wt.frm_user=:P63_USER_ID
+       and wt.status='P'
 
        union all
 
-       select to_user user_id, tranc_id, to_char(issueddt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Transfer In ('||frm_user||')' tranc_type, (amount) amount from wet_tp
-       where to_user=:P63_USER_ID
-       and status='P'
+       select wt.to_user user_id, wp.FLNAME, wt.tranc_id, to_char(wt.issueddt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Transfer In ('||wt.frm_user||')' tranc_type, (wt.amount) amount from wet_tp wt
+       join wem_playerdet wpd ON wt.to_user = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where wt.to_user=:P63_USER_ID
+       and wt.status='P'
 
        union all
 
-       select user_id, tranc_id, db_utfield(cs_approveby,'~',2) trancdt, 'Adjustment' tranc_type, 0 amount from wet_topup
-       where user_id=:P63_USER_ID
-       and claim='Y'
-       and adjustment='Y'
-       and nvl(adjustment_type,'U')='U'
-       and status='P'
+       select wt.user_id, wp.FLNAME, wt.tranc_id, db_utfield(wt.cs_approveby,'~',2) trancdt, 'Adjustment' tranc_type, 0 amount from wet_topup wt
+       join wem_playerdet wpd ON wt.user_id = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where wt.user_id=:P63_USER_ID
+       and wt.claim='Y'
+       and wt.adjustment='Y'
+       and nvl(wt.adjustment_type,'U')='U'
+       and wt.status='P'
 
        Union all
 
-       select user_id, tranc_id, to_char(claimdt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Advance' tranc_type, 0 amount from wet_topup
-       where user_id=:P63_USER_ID
-       and claim='Y'
-       and adjustment='Y'
-       and nvl(adjustment_type,'U')='A'
-       and status='P'
+       select wt.user_id, wp.FLNAME, wt.tranc_id, to_char(wt.claimdt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'Advance' tranc_type, 0 amount from wet_topup wt
+       join wem_playerdet wpd ON wt.user_id = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where wt.user_id=:P63_USER_ID
+       and wt.claim='Y'
+       and wt.adjustment='Y'
+       and nvl(wt.adjustment_type,'U')='A'
+       and wt.status='P'
 
        Union all
 
-       select user_id, tranc_id, db_utfield(cs_approveby,'~',2) trancdt, 'Referer Bonus' tranc_type, 0 amount from wet_topup
-       where user_id=:P63_USER_ID
-       and adjustment='Y'
-       and nvl(adjustment_type,'U')='R'
-       and status='P'
+       select wt.user_id, wp.FLNAME, wt.tranc_id, db_utfield(wt.cs_approveby,'~',2) trancdt, 'Referer Bonus' tranc_type, 0 amount from wet_topup wt
+       join wem_playerdet wpd ON wt.user_id = wpd.user_id
+       join wem_player wp ON wpd.id = wp.id
+       where wt.user_id=:P63_USER_ID
+       and wt.adjustment='Y'
+       and nvl(wt.adjustment_type,'U')='R'
+       and wt.status='P'
 
-       Union all
-
-       select user_id, null tranc_id, to_char(trxdt,'DD-MON-YYYY HH24:MI:SS') trancdt, 'WL before Admin' tranc_type, wl amount from wet_pwl
-       where user_id=:P63_USER_ID
-       
 ) order by trancdt desc
