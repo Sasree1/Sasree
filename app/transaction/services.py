@@ -119,14 +119,14 @@ def upsert_embeddings(index, ids, embeddings, metadata_list, batch_size=100):
 
 
 def generate_embeddings_from_text(row):
-    embedding_input = f"User {row["FLNAME"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}."
+    embedding_input = f"User {row["USER_ID"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}."
     embeddings = generate_embeddings(embedding_input)
     return embeddings
 
 
 def create_metadata(row):
     metadata = {
-        "text": f"User {row["FLNAME"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}.",
+        "text": f"User {row["USER_ID"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}.",
         "user_id": row["USER_ID"],
         "user_name": row["FLNAME"],
         "transaction_type": row["TRANC_TYPE"],

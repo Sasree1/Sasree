@@ -24,19 +24,13 @@ def create_index(INDEX_NAME=INDEX_NAME):
             region='us-east-1'
         ))
 
-def upsert_embeddings(index, ids, embeddings, metadata_list, batch_size=100):
-    for start in range(0, len(ids), batch_size):
-        end = start + batch_size
-        batch_ids = ids[start:end]
-        batch_embeddings = embeddings[start:end]
-        batch_metadata = metadata_list[start:end]
-
-        vectors = [
-            {"id": str(id_), "values": embedding, "metadata": metadata}
-            for id_, embedding, metadata in zip(batch_ids, batch_embeddings, batch_metadata)
-        ]
-        print('vectors: ', vectors)
-        index.upsert(vectors)
+def upsert_embeddings(index, ids, embeddings, metadata_list):
+    vectors = [
+        {"id": str(id_), "values": embedding, "metadata": metadata}
+        for id_, embedding, metadata in zip(ids, embeddings, metadata_list)
+    ]
+    print('vectors: ', vectors)
+    index.upsert(vectors)
 
 
 def generate_embeddings(embedding_input):
@@ -46,20 +40,19 @@ def generate_embeddings(embedding_input):
 
 
 def generate_embeddings_from_text(row):
-    embedding_input = f"User {row["FLNAME"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}."
+    embedding_input = f"User {row["USER_ID"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}."
     embeddings = generate_embeddings(embedding_input)
     return embeddings
 
 
 def create_metadata(row):
     metadata = {
-        "text": f"User {row["FLNAME"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}.",
+        "text": f"User {row["USER_ID"]} made a {row["TRANC_TYPE"]} of RM {row["AMOUNT"]} on {row["TRANCDT"]}.",
         "user_id": row["USER_ID"],
         "user_name": row["FLNAME"],
         "transaction_type": row["TRANC_TYPE"],
-        "amount": row["AMOUNT"],
-        'trans_date': str(row["TRANCDT"]),
-        'type': row["TRANC_TYPE"],
+        'transaction_date': str(row["TRANCDT"]),
+        "transaction_amount": row["AMOUNT"],
     }
     return metadata
 
@@ -69,6 +62,7 @@ async def ingest_data_async(INDEX_NAME=INDEX_NAME):
     db = Database()
 
     async for cml_data in db.get_cml_data_async():
+        print('cml_data_count: ', len(cml_data))
         ids = cml_data['TRANC_ID'].tolist()
         # metadata_list = cml_data.to_dict(orient='records')
         
@@ -81,8 +75,8 @@ async def ingest_data_async(INDEX_NAME=INDEX_NAME):
 
 
 if __name__ == "__main__":
-    create_index("all-transactions-v2")
-    asyncio.run(ingest_data_async(INDEX_NAME="all-transactions-v2"))
+    create_index("all-transactions-v3")
+    asyncio.run(ingest_data_async(INDEX_NAME="all-transactions-v3"))
 
 
 
