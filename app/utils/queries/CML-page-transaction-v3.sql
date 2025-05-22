@@ -1,4 +1,4 @@
-SELECT COUNT(*) FROM (
+SELECT * FROM (
     SELECT wt.user_id, wp.FLNAME, wt.tranc_id, TO_CHAR(wt.claimdt, 'DD-MON-YYYY HH24:MI:SS') trancdt, 'Top Up' tranc_type, wt.amount
     FROM wet_topup wt
     JOIN wem_playerdet wpd ON wt.user_id = wpd.user_id
@@ -70,4 +70,4 @@ SELECT COUNT(*) FROM (
       AND wt.status = 'P'
       AND TO_DATE(db_utfield(wt.cs_approveby, '~', 2), 'DD-MON-YYYY HH24:MI:SS') >= SYSDATE - 183
 )
-ORDER BY trancdt DESC;
+ORDER BY trancdt DESC

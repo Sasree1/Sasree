@@ -30,7 +30,7 @@ class Database:
         # cursor = conn.cursor()
 
         # query = """SELECT * FROM wet_topup WHERE rownum <= 10"""
-        query = open("app/utils/queries/CML-page-transaction.sql", "r").read()
+        query = open("app/utils/queries/CML-page-transaction-v4.sql", "r").read()
         # query = open("app/utils/queries/CML-page-transaction-v2.sql", "r").read()
 
         # cursor.execute(query, P63_USER_ID="HPWIN1015")
@@ -52,7 +52,7 @@ class Database:
 
             # query = """SELECT * FROM wet_topup WHERE rownum <= 10"""
             # query = open("app/utils/queries/CML-page-transaction.sql", "r").read()
-            query = open("app/utils/queries/CML-page-transaction-v3.sql", "r").read()
+            query = open("app/utils/queries/CML-page-transaction-v4.sql", "r").read()
 
             # cursor.execute(query, P63_USER_ID="HPWIN1015")
             # cursor.execute(query)
