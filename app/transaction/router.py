@@ -44,6 +44,7 @@ async def query(user_query: UserQuery, response: Response):
     #     "context": context,
     #     "today_date": datetime.datetime.today().strftime('%Y-%m-%d')
     # })
+
     response = "".join(chain.stream({
         "user_question": user_question,
         "context": context,
@@ -98,8 +99,8 @@ async def websocket_query(websocket: WebSocket):
 
 @router.get('/generate-embeddings', response_class=CustomJSONResponse)
 async def generate_embeddings(response: Response):
-    create_index("all-transactions-v2")
-    await ingest_data_async("all-transactions-v2")
+    create_index("all-transactions-v4")
+    await ingest_data_async("all-transactions-v4")
 
     return {"message": "Embeddings generated successfully"}
 
@@ -119,7 +120,7 @@ async def index_info(response: Response):
     # create_index("all-transactions-v2")
 
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
-    index = pc.Index("all-transactions-v2")
+    index = pc.Index("all-transactions-v4")
     stats = index.describe_index_stats()
     print('stats: ', stats)
 
