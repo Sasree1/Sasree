@@ -86,4 +86,4 @@ SELECT * FROM (
       AND TO_DATE(db_utfield(wt.cs_approveby, '~', 2), 'DD-MON-YYYY HH24:MI:SS')
           BETWEEN TO_DATE('16-MAR-2025', 'DD-MON-YYYY') AND TO_DATE('16-APR-2025', 'DD-MON-YYYY')
 )
-ORDER BY trancdt DESC;
+ORDER BY trancdt DESC
