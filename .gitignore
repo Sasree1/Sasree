@@ -5,7 +5,6 @@ __pycache__/
 *$py.class
 
 # VS Code
-.vscode
 
 # Django stuff:
 *.log
@@ -38,3 +37,7 @@ env/
 venv/
 venv2/
 ENV/
+branch_structure.json
+temp_auto_push.bat
+temp_interactive_push.bat
+.gitignore
