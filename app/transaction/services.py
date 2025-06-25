@@ -11,6 +11,7 @@ from langchain_community.embeddings import SentenceTransformerEmbeddings, OpenAI
 from langchain_community.chat_models import ChatOllama
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
+from sentence_transformers import SentenceTransformer
 # from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 from app.utils.fetch_data import Database
@@ -204,10 +205,12 @@ async def ingest_data_async(INDEX_NAME=INDEX_NAME):
         upsert_embeddings(index, ids, embeddings, metadata_list)
 
 
-async def retrieve_from_pinecone(user_query):
-    model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
-    pinecone = PineconeVectorStore.from_existing_index(index_name=INDEX_NAME, embedding=model)
-    context = await pinecone.asimilarity_search(user_query, k=100)
+def retrieve_from_pinecone(user_query):
+    # model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+    model = SentenceTransformer(os.environ.get("EMBEDDING_MODEL_NAME"))
+    index = Pinecone.Index(pc, INDEX_NAME)
+    query_embedding = model.encode(user_query).tolist()
+    context = index.query(vector=query_embedding, top_k=200, include_metadata=True)
     return context
 
 

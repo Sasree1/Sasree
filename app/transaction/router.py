@@ -24,7 +24,7 @@ async def query(user_query: UserQuery, response: Response):
     # create_index()
     # ingest_data()
     user_question = user_query.query
-    context = await retrieve_from_pinecone(user_question)
+    context = retrieve_from_pinecone(user_question)
     
     template = """
         Answer the question below according to your knowledge in a way that will be helpful to users asking the question. If no answer is found, return "No answer found".
