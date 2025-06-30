@@ -304,36 +304,32 @@ class Database:
     
     def get_monthly_promotion_summary(self, playerdet_id):
         conn = self.connect()
-        cursor = conn.cursor()
 
-        query = """
+        query = f"""
             select a.promotioncd, a.fldesc, nvl(to_char(a.monthly_qty),'Unlimited') monthly_qty ,
-            (select count(*) from wet_topup where user_id in (select user_id from wem_playerdet where id=:P63_ID) and status='P' and promotioncd=a.promotioncd and to_char(claimdt,'YYYYMM')=to_char(sysdate,'YYYYMM')) monthly_taken,
-            (select count(*) from wet_topup where user_id in (select user_id from wem_playerdet where id=:P63_ID) and status='P' and promotioncd=a.promotioncd) all_time
+            (select count(*) from wet_topup where user_id in (select user_id from wem_playerdet where id='{playerdet_id}') and status='P' and promotioncd=a.promotioncd and to_char(claimdt,'YYYYMM')=to_char(sysdate,'YYYYMM')) monthly_taken,
+            (select count(*) from wet_topup where user_id in (select user_id from wem_playerdet where id='{playerdet_id}') and status='P' and promotioncd=a.promotioncd) all_time
             from wem_promotion a
             where a.close='N'
             and to_char(sysdate,'YYYYMM')>=to_char(a.eftdtfrm,'YYYYMM')
             and to_char(sysdate,'YYYYMM')<=to_char(a.eftdtto,'YYYYMM')
             order by a.seqno
         """
-        cursor.execute(query, P63_ID=playerdet_id)
-        records = cursor.fetchall()
-        return records
+        data = pd.read_sql(query, con=conn)
+        return data
 
     def get_back_account_info(self, playerdet_id):
         conn = self.connect()
-        cursor = conn.cursor()
 
-        query = """
+        query = f"""
             select bankcd bank_nm, bankcd, bankacc, upper(holder_name) holder_name, user_id, count(*) from wet_withdraw
-            where user_id in (select x.user_id from wem_playerdet x where id=:P63_ID)
+            where user_id in (select x.user_id from wem_playerdet x where id='{playerdet_id}')
             and bankacc is not null
             group by bankcd, bankacc, upper(holder_name), user_id
             having count(*)>3
         """
-        cursor.execute(query, P63_ID=playerdet_id)
-        records = cursor.fetchall()
-        return records
+        data = pd.read_sql(query, con=conn)
+        return data
     
     async def get_cml_data_async(self):
         def generate():

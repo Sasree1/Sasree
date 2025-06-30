@@ -185,24 +185,74 @@ async def generate_user_summary_embeddings(response: Response):
     return {"message": "Embedding generated successfully"}
 
 
+@router.post('/generate-additional-info-embeddings', response_class=CustomJSONResponse)
 async def get_additional_info():
     INDEX_NAME = os.environ.get("INDEX_NAME")
     pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
     index = Pinecone.Index(pc, INDEX_NAME)
     db = Database()
-    user_id = "AARON001"
 
-    vip_info_df = db.get_vip_info(user_id)
-    vip_info_json = vip_info_df.to_dict(orient='records')
+    user_ids = db.get_user_ids()
+    for id in user_ids:
+        user_id = id[0]
 
-    playerdet_id = db.get_playerdet_id(user_id)
-    promotion_summary = db.get_monthly_promotion_summary(playerdet_id)
-    bank_account = db.get_back_account_info(playerdet_id)
+        vip_info_df = db.get_vip_info(user_id)
+        vip_info = vip_info_df.to_dict(orient='records')
 
-    for i in promotion_summary:
-        print('i: ', i)
+        playerdet_id = db.get_playerdet_id(user_id)
+        # promotion_summary_df = db.get_monthly_promotion_summary(playerdet_id)
+        # promotion_summary = promotion_summary_df.to_dict(orient='records')
+
+        bank_account_df = db.get_back_account_info(playerdet_id)
+        bank_accounts = bank_account_df.to_dict(orient='records')
+
+        embedding_input = f"""
+            VIP reports of user {user_id}:
+            {vip_info}
+        """
+        model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+        vip_embeddings = model.embed_query(embedding_input)
+
+        vip_metadata = {
+            "text": embedding_input,
+            "user_id": user_id,
+        }
+
+        # promotion_embedding_input = f"""
+        #     Monthly promotion summary of user {user_id}:
+        #     {promotion_summary}
+        # """
+        # model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+        # promotion_embeddings = model.embed_query(promotion_embedding_input)
+
+        # promotion_metadata = {
+        #     "text": promotion_embedding_input,
+        #     "user_id": user_id,
+        # }
+
+        bank_embedding_input = f"""
+            Bank accounts of user {user_id}:
+            {bank_accounts}
+        """
+        model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+        bank_account_embeddings = model.embed_query(bank_embedding_input)
+
+        bank_account_metadata = {
+            "text": bank_embedding_input,
+            "user_id": user_id,
+        }
+
+        vectors = [
+            {"id": f"{user_id}_vip_info", "values": vip_embeddings, "metadata": vip_metadata},
+            # {"id": f"{user_id}_promotion_sammary", "values": promotion_embeddings, "metadata": promotion_metadata},
+            {"id": f"{user_id}_bank_accounts", "values": bank_account_embeddings, "metadata": bank_account_metadata},
+        ]
+        index.upsert(vectors)
+        print(f'User {user_id} information addded...')
+        break
 
     return {"message": "Embedding generated successfully"}
+
 
 @router.get('/index-info', response_class=CustomJSONResponse)
 async def index_info(response: Response):
