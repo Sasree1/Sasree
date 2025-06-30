@@ -1,7 +1,7 @@
 import datetime
 import asyncio
 from fastapi import APIRouter, Response, WebSocket, WebSocketDisconnect
-from app.transaction.services import create_index, ingest_data, ingest_data_async, retrieve_from_pinecone
+from app.transaction.services import create_index, ingest_data, ingest_data_async, retrieve_from_pinecone, to_ascii_safe
 
 from app.transaction.schema import UserQuery
 from app.core.custom_renderer import CustomJSONResponse
@@ -177,7 +177,7 @@ async def generate_user_summary_embeddings(response: Response):
         }
 
         vectors = [
-            {"id": f"{user_id}_summary", "values": embeddings, "metadata": metadata}
+            {"id": f"{to_ascii_safe(user_id)}_summary", "values": embeddings, "metadata": metadata}
         ]
         index.upsert(vectors)
         print(f'User {user_id} summary addded...')
@@ -243,13 +243,12 @@ async def get_additional_info():
         }
 
         vectors = [
-            {"id": f"{user_id}_vip_info", "values": vip_embeddings, "metadata": vip_metadata},
-            # {"id": f"{user_id}_promotion_sammary", "values": promotion_embeddings, "metadata": promotion_metadata},
-            {"id": f"{user_id}_bank_accounts", "values": bank_account_embeddings, "metadata": bank_account_metadata},
+            {"id": f"{to_ascii_safe(user_id)}_vip_info", "values": vip_embeddings, "metadata": vip_metadata},
+            # {"id": f"{to_ascii_safe(user_id)}_promotion_sammary", "values": promotion_embeddings, "metadata": promotion_metadata},
+            {"id": f"{to_ascii_safe(user_id)}_bank_accounts", "values": bank_account_embeddings, "metadata": bank_account_metadata},
         ]
         index.upsert(vectors)
         print(f'User {user_id} information addded...')
-        break
 
     return {"message": "Embedding generated successfully"}
 

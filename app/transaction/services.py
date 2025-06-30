@@ -1,6 +1,7 @@
 import os
 import warnings
 import json
+import unicodedata
 import sys
 from pinecone import Pinecone
 from pinecone import ServerlessSpec
@@ -21,6 +22,9 @@ load_dotenv()
 INDEX_NAME = os.environ.get("INDEX_NAME")
 pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
 
+
+def to_ascii_safe(s):
+    return unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode('ascii').replace(" ", "_")
 
 def fetch_amount(user_query):
     # Fetch the amount from the user query
