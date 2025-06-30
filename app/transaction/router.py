@@ -121,8 +121,8 @@ async def generate_user_summary_embeddings(response: Response):
         withdraw = db.get_withdraw_amount(user_id)
         topup = db.get_topup_amount(user_id)
         bonus = db.get_bonus(user_id)
-        lifetime_winlose = float(topup) - float(withdraw)
-        affiliate_win_lose = float(topup) - float(withdraw) - float(bonus)
+        lifetime_winlose = float(topup.replace(",", "")) - float(withdraw.replace(",", ""))
+        affiliate_win_lose = float(topup.replace(",", "")) - float(withdraw.replace(",", "")) - float(bonus.replace(",", ""))
         
         may_win_lose = db.get_may_month_win_lose(user_id)
         april_win_lose = db.get_april_month_win_lose(user_id)
@@ -133,7 +133,7 @@ async def generate_user_summary_embeddings(response: Response):
         today_withdraw = db.get_today_withdraw(user_id)
         transfer_in = db.get_total_transfer_in(user_id)
         transfer_out = db.get_total_transfer_out(user_id)
-        monthly_winlose = float(monthly_topup) - float(monthly_withdraw)
+        monthly_winlose = float(monthly_topup.replace(",", "")) - float(monthly_withdraw.replace(",", ""))
 
         embedding_input = f"""
             The summary of user {user_id} is,
