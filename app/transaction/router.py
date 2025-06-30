@@ -10,6 +10,8 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
+from langchain_community.embeddings import SentenceTransformerEmbeddings
+
 from app.utils.fetch_data import Database
 
 
@@ -105,15 +107,102 @@ async def generate_embeddings(response: Response):
     return {"message": "Embeddings generated successfully"}
 
 
-@router.get('/test-db', response_class=CustomJSONResponse)
-async def test_db(response: Response):
+@router.post('/generate-user-summary-embeddings', response_class=CustomJSONResponse)
+async def generate_user_summary_embeddings(response: Response):
+    INDEX_NAME = os.environ.get("INDEX_NAME")
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    index = Pinecone.Index(pc, INDEX_NAME)
     db = Database()
 
-    records = db.get_cml_data_sync()
-    print('records: ', records.head(10))
+    user_ids = db.get_user_ids()
+    for id in user_ids:
+        user_id = id[0]
 
-    return {"message": "Embeddings generated successfully"}
+        withdraw = db.get_withdraw_amount(user_id)
+        topup = db.get_topup_amount(user_id)
+        bonus = db.get_bonus(user_id)
+        lifetime_winlose = float(topup) - float(withdraw)
+        affiliate_win_lose = float(topup) - float(withdraw) - float(bonus)
+        
+        may_win_lose = db.get_may_month_win_lose(user_id)
+        april_win_lose = db.get_april_month_win_lose(user_id)
+        march_win_lose = db.get_march_month_win_lose(user_id)
+        monthly_topup = db.get_monthly_topup(user_id)
+        monthly_withdraw = db.get_monthly_withdraw(user_id)
+        today_topup = db.get_today_topup(user_id)
+        today_withdraw = db.get_today_withdraw(user_id)
+        transfer_in = db.get_total_transfer_in(user_id)
+        transfer_out = db.get_total_transfer_out(user_id)
+        monthly_winlose = float(monthly_topup) - float(monthly_withdraw)
 
+        embedding_input = f"""
+            The summary of user {user_id} is,
+            lifetime withdraw amount RM {withdraw},
+            lifetime topup amount RM {topup},
+            lifetime bonus RM {bonus},
+            lifetime win/lose RM {lifetime_winlose},
+            lifetime affiliate win/lose RM {affiliate_win_lose},
+            May month win/lose RM {may_win_lose},
+            April month win/lose RM {april_win_lose},
+            March month win/lose RM {march_win_lose},
+            Monthly topup amount RM {monthly_topup},
+            Monthly withdraw amount RM {monthly_withdraw},
+            Monthly win/lose amount RM {monthly_winlose},
+            Today topup amount RM {today_topup},
+            Today withdraw amount RM {today_withdraw},
+            Total transfer-in amount RM {transfer_in},
+            Total transfer-out amount RM {transfer_out}.
+        """
+        model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+        embeddings = model.embed_query(embedding_input)
+
+        metadata = {
+            "text": embedding_input,
+            "user_id": user_id,
+            "lifetime_withdraw_amount": withdraw,
+            "lifetime_topup_amount": topup,
+            "lifetime_bonus_amount": bonus,
+            "lifetime_win_or_lose_amount": lifetime_winlose,
+            "lifetime_affiliate_win_or_lose_amount": affiliate_win_lose,
+            "may_month_win_or_lose_amount": may_win_lose,
+            "april_month_win_or_lose_amount": april_win_lose,
+            "march_month_win_or_lose_amount": march_win_lose,
+            "monthly_topup_amount": monthly_topup,
+            "monthly withdraw_amount": monthly_withdraw,
+            "monthly_win_or_lose_amount": monthly_winlose,
+            "today_topup_amount": today_topup,
+            "today_withdraw_amount": today_withdraw,
+            "total_transfer_in_amount": transfer_in,
+            "total_transfer_out_amount": transfer_out,
+        }
+
+        vectors = [
+            {"id": f"{user_id}_summary", "values": embeddings, "metadata": metadata}
+        ]
+        index.upsert(vectors)
+        print(f'User {user_id} summary addded...')
+
+    return {"message": "Embedding generated successfully"}
+
+
+async def get_additional_info():
+    INDEX_NAME = os.environ.get("INDEX_NAME")
+    pc = Pinecone(api_key=os.environ.get("PINECONE_API_KEY"))
+    index = Pinecone.Index(pc, INDEX_NAME)
+    db = Database()
+    user_id = "AARON001"
+
+    vip_info_df = db.get_vip_info(user_id)
+    vip_info_json = vip_info_df.to_dict(orient='records')
+
+    playerdet_id = db.get_playerdet_id(user_id)
+    promotion_summary = db.get_monthly_promotion_summary(playerdet_id)
+    bank_account = db.get_back_account_info(playerdet_id)
+
+    for i in promotion_summary:
+        print('i: ', i)
+
+    return {"message": "Embedding generated successfully"}
 
 @router.get('/index-info', response_class=CustomJSONResponse)
 async def index_info(response: Response):
