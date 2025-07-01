@@ -121,6 +121,16 @@ async def generate_user_summary_embeddings(response: Response):
         withdraw = db.get_withdraw_amount(user_id)
         topup = db.get_topup_amount(user_id)
         bonus = db.get_bonus(user_id)
+
+        if bonus == "None":
+            bonus = "0"
+
+        if withdraw == "None":
+            withdraw = "0"
+        
+        if topup == "None":
+            topup = "0"
+        
         lifetime_winlose = float(topup.replace(",", "")) - float(withdraw.replace(",", ""))
         affiliate_win_lose = float(topup.replace(",", "")) - float(withdraw.replace(",", "")) - float(bonus.replace(",", ""))
         
