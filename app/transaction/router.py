@@ -118,6 +118,13 @@ async def generate_user_summary_embeddings(response: Response):
     for id in user_ids:
         user_id = id[0]
 
+        vector_id = f"{to_ascii_safe(user_id)}_summary"
+        response = index.fetch(ids=[vector_id])
+
+        if vector_id in response.vectors:
+            print(f"{vector_id} is skipped...")
+            continue
+
         withdraw = db.get_withdraw_amount(user_id)
         topup = db.get_topup_amount(user_id)
         bonus = db.get_bonus(user_id)
@@ -187,7 +194,7 @@ async def generate_user_summary_embeddings(response: Response):
         }
 
         vectors = [
-            {"id": f"{to_ascii_safe(user_id)}_summary", "values": embeddings, "metadata": metadata}
+            {"id": vector_id, "values": embeddings, "metadata": metadata}
         ]
         index.upsert(vectors)
         print(f'User {user_id} summary addded...')
