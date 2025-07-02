@@ -11,7 +11,7 @@ from langchain_community.chat_models import ChatOpenAI
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.utils.create_embeddings import generate_user_summary_embedding, generate_user_additional_embedding
+from app.utils.create_embeddings import generate_user_promotion_embedding, generate_user_summary_embedding, generate_user_additional_embedding
 
 from langchain_community.embeddings import SentenceTransformerEmbeddings
 
@@ -119,6 +119,12 @@ async def generate_user_summary_embeddings(background_tasks: BackgroundTasks):
 @router.post('/generate-additional-info-embeddings', response_class=CustomJSONResponse)
 async def get_additional_info(background_tasks: BackgroundTasks):
     background_tasks.add_task(generate_user_additional_embedding)
+    return {"message": "Embeddings are generating"}
+
+
+@router.post('/generate-promotion-info-embeddings', response_class=CustomJSONResponse)
+async def get_user_promotion_info(background_tasks: BackgroundTasks):
+    background_tasks.add_task(generate_user_promotion_embedding)
     return {"message": "Embeddings are generating"}
 
 
