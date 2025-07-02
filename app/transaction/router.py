@@ -123,8 +123,8 @@ async def get_additional_info(background_tasks: BackgroundTasks):
 
 
 @router.post('/generate-promotion-info-embeddings', response_class=CustomJSONResponse)
-async def get_user_promotion_info(background_tasks: BackgroundTasks):
-    background_tasks.add_task(generate_user_promotion_embedding)
+async def get_user_promotion_info():
+    generate_user_promotion_embedding()
     return {"message": "Embeddings are generating"}
 
 
