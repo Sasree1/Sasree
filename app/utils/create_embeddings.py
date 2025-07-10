@@ -108,6 +108,7 @@ def generate_user_additional_embedding():
     user_ids = db.get_user_ids()
     for id in user_ids:
         user_id = id[0]
+        vectors = []
 
         vip_info_df = db.get_vip_info(user_id)
         vip_info = vip_info_df.to_dict(orient='records')
@@ -119,17 +120,20 @@ def generate_user_additional_embedding():
         bank_account_df = db.get_back_account_info(playerdet_id)
         bank_accounts = bank_account_df.to_dict(orient='records')
 
-        embedding_input = f"""
-            VIP reports of user {user_id}:
-            {vip_info}
-        """
-        model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
-        vip_embeddings = model.embed_query(embedding_input)
+        if len(vip_info_df) > 0:
+            embedding_input = f"""
+                VIP reports of user {user_id}:
+                {vip_info}
+            """
+            model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+            vip_embeddings = model.embed_query(embedding_input)
 
-        vip_metadata = {
-            "text": embedding_input,
-            "user_id": user_id,
-        }
+            vip_metadata = {
+                "text": embedding_input,
+                "user_id": user_id,
+            }
+
+            vectors.append({"id": f"{to_ascii_safe(user_id)}_vip_info", "values": vip_embeddings, "metadata": vip_metadata})
 
         # promotion_embedding_input = f"""
         #     Monthly promotion summary of user {user_id}:
@@ -143,25 +147,26 @@ def generate_user_additional_embedding():
         #     "user_id": user_id,
         # }
 
-        bank_embedding_input = f"""
-            Bank accounts of user {user_id}:
-            {bank_accounts}
-        """
-        model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
-        bank_account_embeddings = model.embed_query(bank_embedding_input)
+        if len(bank_account_df) > 0:
+            bank_embedding_input = f"""
+                Bank accounts of user {user_id}:
+                {bank_accounts}
+            """
+            model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+            bank_account_embeddings = model.embed_query(bank_embedding_input)
 
-        bank_account_metadata = {
-            "text": bank_embedding_input,
-            "user_id": user_id,
-        }
+            bank_account_metadata = {
+                "text": bank_embedding_input,
+                "user_id": user_id,
+            }
 
-        vectors = [
-            {"id": f"{to_ascii_safe(user_id)}_vip_info", "values": vip_embeddings, "metadata": vip_metadata},
-            # {"id": f"{to_ascii_safe(user_id)}_promotion_sammary", "values": promotion_embeddings, "metadata": promotion_metadata},
-            {"id": f"{to_ascii_safe(user_id)}_bank_accounts", "values": bank_account_embeddings, "metadata": bank_account_metadata},
-        ]
-        index.upsert(vectors)
-        print(f'User {user_id} information addded...')
+            vectors.append({"id": f"{to_ascii_safe(user_id)}_bank_accounts", "values": bank_account_embeddings, "metadata": bank_account_metadata})
+
+        if len(vectors) > 0:
+            index.upsert(vectors)
+            print(f'User {user_id} information addded...')
+        else:
+            print(f'No information for user {user_id}...')
 
 
 def generate_user_promotion_embedding():
