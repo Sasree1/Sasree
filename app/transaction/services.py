@@ -214,7 +214,7 @@ def retrieve_from_pinecone(user_query):
     model = SentenceTransformer(os.environ.get("EMBEDDING_MODEL_NAME"))
     index = Pinecone.Index(pc, INDEX_NAME)
     query_embedding = model.encode(user_query).tolist()
-    context = index.query(vector=query_embedding, top_k=40, include_metadata=True)
+    context = index.query(vector=query_embedding, top_k=200, include_metadata=True)
     return context
 
 

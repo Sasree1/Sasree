@@ -35,7 +35,7 @@ class Database:
             select user_id from wev_tranc
             union all
             select user_id from wet_pwl
-            )
+            ) ORDER BY user_id DESC
         """
         cursor.execute(query)
         records = cursor.fetchall()
