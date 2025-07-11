@@ -11,7 +11,7 @@ app = FastAPI(debug=True, reload=True)
 static_path = os.path.join(os.path.dirname(__file__), "static")
 app.mount("/static", StaticFiles(directory=static_path), name="static")
 
-origins = ["https://crm-alpha.maxapex.net", "http://127.0.0.1:8000", "https://34.142.255.255"]
+origins = ["https://alphaandalpha.net"]
 
 app.add_middleware(
     CORSMiddleware,
