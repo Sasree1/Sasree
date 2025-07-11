@@ -183,20 +183,23 @@ def generate_user_promotion_embedding():
         promotion_summary_df = db.get_monthly_promotion_summary(playerdet_id)
         promotion_summary = promotion_summary_df.to_dict(orient='records')
 
-        promotion_embedding_input = f"""
-            Monthly promotion summary of user {user_id}:
-            {promotion_summary}
-        """
-        model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
-        promotion_embeddings = model.embed_query(promotion_embedding_input)
+        if len(promotion_summary_df) > 0:
+            promotion_embedding_input = f"""
+                Monthly promotion summary of user {user_id}:
+                {promotion_summary}
+            """
+            model = SentenceTransformerEmbeddings(model_name=os.environ.get("EMBEDDING_MODEL_NAME"))
+            promotion_embeddings = model.embed_query(promotion_embedding_input)
 
-        promotion_metadata = {
-            "text": promotion_embedding_input,
-            "user_id": user_id,
-        }
+            promotion_metadata = {
+                "text": promotion_embedding_input,
+                "user_id": user_id,
+            }
 
-        vectors = [
-            {"id": f"{to_ascii_safe(user_id)}_promotion_sammary", "values": promotion_embeddings, "metadata": promotion_metadata},
-        ]
-        index.upsert(vectors)
-        print(f'User {user_id} information addded...')
+            vectors = [
+                {"id": f"{to_ascii_safe(user_id)}_promotion_sammary", "values": promotion_embeddings, "metadata": promotion_metadata},
+            ]
+            index.upsert(vectors)
+            print(f'User {user_id} information addded...')
+        else:
+            print(f'No information for user {user_id}...')
